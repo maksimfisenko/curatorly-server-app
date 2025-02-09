@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/maksimfisenko/curatorly-server-app/internal/data"
+	"github.com/maksimfisenko/curatorly-server-app/internal/validator"
 )
 
 func (app *application) showCourseHandler(w http.ResponseWriter, r *http.Request) {
@@ -37,6 +38,17 @@ func (app *application) createCourseHandler(w http.ResponseWriter, r *http.Reque
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	course := &data.Course{
+		Title: input.Title,
+	}
+
+	v := validator.New()
+
+	if data.ValidateCourse(v, course); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
