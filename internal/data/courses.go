@@ -84,19 +84,26 @@ func (s CourseStorage) Update(course *Course) error {
 	query := `
 		UPDATE core.courses
 		SET title = $1, updated_at = $2, version = version + 1
-		WHERE id = $3
+		WHERE id = $3 AND version = $4
 		RETURNING updated_at, version;
 	`
 
-	args := []interface{}{course.Title, time.Now(), course.ID}
+	args := []interface{}{course.Title, time.Now(), course.ID, course.Version}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	return s.DB.QueryRowContext(ctx, query, args...).Scan(
-		&course.UpdatedAt,
-		&course.Version,
-	)
+	err := s.DB.QueryRowContext(ctx, query, args...).Scan(&course.UpdatedAt, &course.Version)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s CourseStorage) Delete(id int64) error {
