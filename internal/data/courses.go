@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/maksimfisenko/curatorly-server-app/internal/validator"
@@ -44,7 +45,39 @@ func (s CourseStorage) Insert(course *Course) error {
 }
 
 func (s CourseStorage) Get(id int64) (*Course, error) {
-	return nil, nil
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+		SELECT id, title, created_at, updated_at, version
+		FROM core.courses
+		WHERE id = $1;
+	`
+
+	var course Course
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := s.DB.QueryRowContext(ctx, query, id).Scan(
+		&course.ID,
+		&course.Title,
+		&course.CreatedAt,
+		&course.UpdatedAt,
+		&course.Version,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &course, nil
 }
 
 func (s CourseStorage) Update(course *Course) error {

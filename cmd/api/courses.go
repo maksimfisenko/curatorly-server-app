@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/maksimfisenko/curatorly-server-app/internal/data"
 	"github.com/maksimfisenko/curatorly-server-app/internal/validator"
@@ -16,12 +16,15 @@ func (app *application) showCourseHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	course := data.Course{
-		ID:        id,
-		Title:     "Course Name 1",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		Version:   1,
+	course, err := app.storage.Courses.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"course": course}, nil)
