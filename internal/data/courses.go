@@ -135,3 +135,46 @@ func (s CourseStorage) Delete(id int64) error {
 
 	return nil
 }
+
+func (s CourseStorage) GetAll() ([]*Course, error) {
+	query := `
+		SELECT id, title, created_at, updated_at, version
+		FROM core.courses
+		ORDER BY id;
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	rows, err := s.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	courses := []*Course{}
+
+	for rows.Next() {
+		var course Course
+
+		err := rows.Scan(
+			&course.ID,
+			&course.Title,
+			&course.CreatedAt,
+			&course.UpdatedAt,
+			&course.Version,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		courses = append(courses, &course)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return courses, nil
+}

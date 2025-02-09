@@ -147,3 +147,16 @@ func (app *application) deleteCourseHandler(w http.ResponseWriter, r *http.Reque
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+func (app *application) listCoursesHandler(w http.ResponseWriter, r *http.Request) {
+	courses, err := app.storage.Courses.GetAll()
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"courses": courses}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
