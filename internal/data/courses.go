@@ -81,7 +81,22 @@ func (s CourseStorage) Get(id int64) (*Course, error) {
 }
 
 func (s CourseStorage) Update(course *Course) error {
-	return nil
+	query := `
+		UPDATE core.courses
+		SET title = $1, updated_at = $2, version = version + 1
+		WHERE id = $3
+		RETURNING updated_at, version;
+	`
+
+	args := []interface{}{course.Title, time.Now(), course.ID}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return s.DB.QueryRowContext(ctx, query, args...).Scan(
+		&course.UpdatedAt,
+		&course.Version,
+	)
 }
 
 func (s CourseStorage) Delete(id int64) error {
