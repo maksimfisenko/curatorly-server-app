@@ -52,5 +52,17 @@ func (app *application) createCourseHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	fmt.Fprintf(w, "%+v\n", input)
+	err = app.storage.Courses.Insert(course)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/v1/courses/%d", course.ID))
+
+	err = app.writeJSON(w, http.StatusCreated, envelope{"course": course}, headers)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }

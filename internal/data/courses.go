@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"time"
 
@@ -25,7 +26,21 @@ type CourseStorage struct {
 }
 
 func (s CourseStorage) Insert(course *Course) error {
-	return nil
+	query := `
+		INSERT INTO core.courses (title)
+		VALUES ($1)
+		RETURNING id, created_at, updated_at, version;
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return s.DB.QueryRowContext(ctx, query, course.Title).Scan(
+		&course.ID,
+		&course.CreatedAt,
+		&course.UpdatedAt,
+		&course.Version,
+	)
 }
 
 func (s CourseStorage) Get(id int64) (*Course, error) {
