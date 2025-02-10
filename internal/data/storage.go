@@ -11,11 +11,13 @@ var (
 )
 
 type Storage struct {
-	Courses CourseStorage
+	Courses  CourseStorage
+	Curators CuratorStorage
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Courses: CourseStorage{DB: db},
+		Courses:  CourseStorage{DB: db},
+		Curators: CuratorStorage{DB: db},
 	}
 }
