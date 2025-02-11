@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"time"
 
@@ -50,7 +51,36 @@ type CuratorStorage struct {
 }
 
 func (s CuratorStorage) Insert(curator *Curator) error {
-	return nil
+	query := `
+		INSERT INTO core.curators 
+			(first_name, last_name, middle_name, phone, email, birth_date, city, university, profile)
+		VALUES 
+			($1, $2, $3, $4, $5,$6, $7, $8, $9)
+		RETURNING
+			id, created_at, updated_at, version;
+	`
+
+	args := []interface{}{
+		curator.FirstName,
+		curator.LastName,
+		curator.MiddleName,
+		curator.Phone,
+		curator.Email,
+		curator.BirthDate,
+		curator.City,
+		curator.University,
+		curator.Profile,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return s.DB.QueryRowContext(ctx, query, args...).Scan(
+		&curator.ID,
+		&curator.CreatedAt,
+		&curator.UpdatedAt,
+		&curator.Version,
+	)
 }
 
 func (s CuratorStorage) Get(id int64) (*Curator, error) {
