@@ -21,6 +21,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodDelete, "/v1/courses/:id", app.deleteCourseHandler)
 
 	router.HandlerFunc(http.MethodPost, "/v1/curators", app.createCuratorHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/curators/:id", app.showCuratorHandler)
 
 	return app.recoverPanic(router)
 }

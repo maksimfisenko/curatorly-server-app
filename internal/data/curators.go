@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/maksimfisenko/curatorly-server-app/internal/validator"
@@ -84,7 +85,51 @@ func (s CuratorStorage) Insert(curator *Curator) error {
 }
 
 func (s CuratorStorage) Get(id int64) (*Curator, error) {
-	return nil, nil
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+		SELECT 
+			id, first_name, last_name, middle_name, phone, email, 
+			birth_date, city, university, profile, created_at, updated_at, version
+		FROM 
+			core.curators
+		WHERE 
+			id = $1;
+	`
+
+	var curator Curator
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := s.DB.QueryRowContext(ctx, query, id).Scan(
+		&curator.ID,
+		&curator.FirstName,
+		&curator.LastName,
+		&curator.MiddleName,
+		&curator.Phone,
+		&curator.Email,
+		&curator.BirthDate,
+		&curator.City,
+		&curator.University,
+		&curator.Profile,
+		&curator.CreatedAt,
+		&curator.UpdatedAt,
+		&curator.Version,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &curator, nil
 }
 
 func (s CuratorStorage) Update(curator *Curator) error {
