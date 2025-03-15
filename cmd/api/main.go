@@ -11,6 +11,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/maksimfisenko/curatorly-server-app/internal/data"
 )
 
 const version = "1.0.0"
@@ -29,6 +30,7 @@ type config struct {
 type application struct {
 	config config
 	logger *log.Logger
+	models data.Models
 }
 
 func main() {
@@ -50,7 +52,6 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
-
 	defer db.Close()
 
 	logger.Printf("database connection pool established")
@@ -58,6 +59,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: logger,
+		models: data.NewModels(db),
 	}
 
 	srv := &http.Server{
