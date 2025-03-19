@@ -14,6 +14,12 @@ var (
 	ErrDuplicateEmail = errors.New("duplicate email")
 )
 
+var AnonymousUser = &User{}
+
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
+}
+
 type User struct {
 	ID       int64    `json:"id"`
 	Name     string   `json:"name"`
@@ -106,4 +112,65 @@ func (m UserModel) Insert(user *User) error {
 	}
 
 	return nil
+}
+
+func (m UserModel) Get(id int64) (*User, error) {
+	query := `
+	SELECT id, name, surname, email, password_hash
+	FROM auth.users
+	WHERE id = $1
+	`
+
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Surname,
+		&user.Email,
+		&user.Password.hash,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &user, nil
+}
+
+func (m UserModel) GetByEmail(email string) (*User, error) {
+	query := `
+	SELECT id, name, surname, email, password_hash
+	FROM auth.users
+	WHERE email = $1
+	`
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, email).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Surname,
+		&user.Email,
+		&user.Password.hash,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &user, nil
 }
