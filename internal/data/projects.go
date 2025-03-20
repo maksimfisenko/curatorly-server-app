@@ -33,14 +33,6 @@ type ProjectModel struct {
 	DB *sql.DB
 }
 
-func (m ProjectModel) Insert(project *Project) error {
-	return nil
-}
-
-func (m ProjectModel) Get(id int64) (*Project, error) {
-	return nil, nil
-}
-
-func (m ProjectModel) GerMembers(id int64) ([]*User, error) {
-	return nil, nil
+func (m ProjectModel) GetAllForUser(userID int64) ([]*Project, error) {
+	return make([]*Project, 10), nil
 }
