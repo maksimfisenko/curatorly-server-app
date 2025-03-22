@@ -3,11 +3,15 @@ package data
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"errors"
 	"math/rand"
 	"time"
 
 	"github.com/maksimfisenko/curatorly-server-app/internal/validator"
+)
+
+var (
+	ErrDuplicateUserInProject = errors.New("user already in project")
 )
 
 type Project struct {
@@ -53,9 +57,6 @@ func (m ProjectModel) Insert(project *Project) error {
 
 	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&project.ID, &project.AccessCode, &project.CreatedAt)
 	if err != nil {
-		fmt.Println(project.Title)
-		fmt.Println(GenerateAccessCode())
-		fmt.Println(project.CreatorID)
 		return err
 	}
 
@@ -69,6 +70,69 @@ func (m ProjectModel) Insert(project *Project) error {
 	result, err := m.DB.ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrFailedToAddRecord
+	}
+
+	return nil
+}
+
+func (m ProjectModel) GetByAccessCode(accessCode string) (*Project, error) {
+	query := `
+	SELECT id, title, access_code, creator_id, created_at
+	FROM content.projects
+	WHERE access_code = $1
+	`
+	var project Project
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, accessCode).Scan(
+		&project.ID,
+		&project.Title,
+		&project.AccessCode,
+		&project.CreatorID,
+		&project.CreatedAt,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &project, nil
+}
+
+func (m ProjectModel) InsertUser(projectID, userID int64) error {
+	query := `
+	INSERT INTO content.projects_users (project_id, user_id)
+	VALUES ($1, $2)
+	`
+
+	args := []any{projectID, userID}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "projects_users_pkey"`:
+			return ErrDuplicateUserInProject
+		default:
+			return err
+		}
 	}
 
 	rowsAffected, err := result.RowsAffected()

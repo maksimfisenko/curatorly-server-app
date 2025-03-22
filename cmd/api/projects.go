@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/maksimfisenko/curatorly-server-app/internal/data"
+	"github.com/maksimfisenko/curatorly-server-app/internal/validator"
 )
 
 func (app *application) listUserProjectsHandler(w http.ResponseWriter, r *http.Request) {
@@ -39,13 +41,64 @@ func (app *application) createProjectHandler(w http.ResponseWriter, r *http.Requ
 		CreatorID: user.ID,
 	}
 
-	err = app.models.Projects.Insert(project)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
+	v := validator.New()
+
+	if data.ValidateProject(v, project); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
+	err = app.models.Projects.Insert(project)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
 	err = app.writeJSON(w, http.StatusCreated, envelope{"project": project}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) addUserToProject(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		AccessCode string `json:"access_code"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	v := validator.New()
+
+	project, err := app.models.Projects.GetByAccessCode(input.AccessCode)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			v.AddError("project", "project with this code doesnt exist")
+			app.failedValidationResponse(w, r, v.Errors)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	user := app.contextGetUser(r)
+
+	err = app.models.Projects.InsertUser(project.ID, user.ID)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrDuplicateUserInProject):
+			v.AddError("user", "user already is a member of this project")
+			app.failedValidationResponse(w, r, v.Errors)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, nil, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
