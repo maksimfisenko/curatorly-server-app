@@ -148,5 +148,45 @@ func (m ProjectModel) InsertUser(projectID, userID int64) error {
 }
 
 func (m ProjectModel) GetAllForUser(userID int64) ([]*Project, error) {
-	return make([]*Project, 10), nil
+	query := `
+	SELECT p.id, p.title, p.access_code, p.creator_id, p.created_at
+	FROM content.projects p
+	JOIN content.projects_users pu ON p.id = pu.project_id
+	WHERE pu.user_id = $1;
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	projects := []*Project{}
+
+	for rows.Next() {
+		var project Project
+
+		err := rows.Scan(
+			&project.ID,
+			&project.Title,
+			&project.AccessCode,
+			&project.CreatorID,
+			&project.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		projects = append(projects, &project)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return projects, nil
 }
