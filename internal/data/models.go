@@ -6,7 +6,8 @@ import (
 )
 
 var (
-	ErrRecordNotFound = errors.New("record not found")
+	ErrRecordNotFound    = errors.New("record not found")
+	ErrFailedToAddRecord = errors.New("failed to add record")
 )
 
 type Models struct {
