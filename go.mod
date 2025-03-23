@@ -11,3 +11,5 @@ require golang.org/x/crypto v0.36.0
 require github.com/pascaldekloe/jwt v1.12.0
 
 require golang.org/x/time v0.11.0
+
+require github.com/felixge/httpsnoop v1.0.4
