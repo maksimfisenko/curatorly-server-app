@@ -91,17 +91,12 @@ type UserModel struct {
 }
 
 func (m UserModel) Insert(user *User) error {
-	query := `
-	INSERT INTO auth.users (name, surname, email, password_hash)
-	VALUES ($1, $2, $3, $4)
-	RETURNING id
-	`
 	args := []any{user.Name, user.Surname, user.Email, user.Password.hash}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID)
+	err := m.DB.QueryRowContext(ctx, queryUserInsert, args...).Scan(&user.ID)
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"`:
@@ -115,18 +110,12 @@ func (m UserModel) Insert(user *User) error {
 }
 
 func (m UserModel) Get(id int64) (*User, error) {
-	query := `
-	SELECT id, name, surname, email, password_hash
-	FROM auth.users
-	WHERE id = $1
-	`
-
 	var user User
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+	err := m.DB.QueryRowContext(ctx, queryUserGet, id).Scan(
 		&user.ID,
 		&user.Name,
 		&user.Surname,
@@ -146,17 +135,12 @@ func (m UserModel) Get(id int64) (*User, error) {
 }
 
 func (m UserModel) GetByEmail(email string) (*User, error) {
-	query := `
-	SELECT id, name, surname, email, password_hash
-	FROM auth.users
-	WHERE email = $1
-	`
 	var user User
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, email).Scan(
+	err := m.DB.QueryRowContext(ctx, queryUserGetByEmail, email).Scan(
 		&user.ID,
 		&user.Name,
 		&user.Surname,

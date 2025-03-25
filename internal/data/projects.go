@@ -45,29 +45,19 @@ type ProjectModel struct {
 }
 
 func (m ProjectModel) Insert(project *Project) error {
-	query := `
-	INSERT INTO content.projects (title, access_code, creator_id)
-	VALUES ($1, $2, $3)
-	RETURNING id, access_code, created_at
-	`
 	args := []any{project.Title, GenerateAccessCode(), project.CreatorID}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&project.ID, &project.AccessCode, &project.CreatedAt)
+	err := m.DB.QueryRowContext(ctx, queryProjectInsert, args...).Scan(&project.ID, &project.AccessCode, &project.CreatedAt)
 	if err != nil {
 		return err
 	}
 
-	query = `
-	INSERT INTO content.projects_users (project_id, user_id)
-	VALUES ($1, $2)
-	`
-
 	args = []any{project.ID, project.CreatorID}
 
-	result, err := m.DB.ExecContext(ctx, query, args...)
+	result, err := m.DB.ExecContext(ctx, queryProjectUserInsert, args...)
 	if err != nil {
 		return err
 	}
@@ -85,17 +75,12 @@ func (m ProjectModel) Insert(project *Project) error {
 }
 
 func (m ProjectModel) GetByAccessCode(accessCode string) (*Project, error) {
-	query := `
-	SELECT id, title, access_code, creator_id, created_at
-	FROM content.projects
-	WHERE access_code = $1
-	`
 	var project Project
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, accessCode).Scan(
+	err := m.DB.QueryRowContext(ctx, queryProjectGetByAccessCode, accessCode).Scan(
 		&project.ID,
 		&project.Title,
 		&project.AccessCode,
@@ -115,17 +100,12 @@ func (m ProjectModel) GetByAccessCode(accessCode string) (*Project, error) {
 }
 
 func (m ProjectModel) InsertUser(projectID, userID int64) error {
-	query := `
-	INSERT INTO content.projects_users (project_id, user_id)
-	VALUES ($1, $2)
-	`
-
 	args := []any{projectID, userID}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	result, err := m.DB.ExecContext(ctx, query, args...)
+	result, err := m.DB.ExecContext(ctx, queryProjectUserInsert, args...)
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "projects_users_pkey"`:
@@ -148,17 +128,10 @@ func (m ProjectModel) InsertUser(projectID, userID int64) error {
 }
 
 func (m ProjectModel) GetAllForUser(userID int64) ([]*Project, error) {
-	query := `
-	SELECT p.id, p.title, p.access_code, p.creator_id, p.created_at
-	FROM content.projects p
-	JOIN content.projects_users pu ON p.id = pu.project_id
-	WHERE pu.user_id = $1;
-	`
-
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := m.DB.QueryContext(ctx, query, userID)
+	rows, err := m.DB.QueryContext(ctx, queryProjectGetAllForUser, userID)
 	if err != nil {
 		return nil, err
 	}
