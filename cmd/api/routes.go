@@ -5,6 +5,9 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	_ "github.com/maksimfisenko/curatorly-server-app/docs"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func (app *application) routes() http.Handler {
@@ -23,6 +26,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/api/v1/projects/add-user", app.requireAuthenticatedUser(app.addUserToProject))
 
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
+
+	router.HandlerFunc(http.MethodGet, "/swagger/:any", httpSwagger.WrapHandler)
 
 	return app.metrics(app.recoverPanic(app.rateLimit(app.authenticate(router))))
 }

@@ -4,10 +4,17 @@ import (
 	"errors"
 	"net/http"
 
+	_ "github.com/maksimfisenko/curatorly-server-app/docs"
 	"github.com/maksimfisenko/curatorly-server-app/internal/data"
 	"github.com/maksimfisenko/curatorly-server-app/internal/validator"
 )
 
+//	@Summary		List user projects
+//	@Description	List all the projects in which user is a creator or an ordinory member.
+//	@Tags			project
+//	@Accept			json
+//	@Produce		json
+//	@Router			/projects [get]
 func (app *application) listUserProjectsHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
 

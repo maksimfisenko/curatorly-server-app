@@ -1,0 +1,21 @@
+basePath: /
+host: localhost:8000
+info:
+  contact: {}
+  description: This is API for the Curaturly server app.
+  title: Curatorly Server App API
+  version: "1.0"
+paths:
+  /projects:
+    get:
+      consumes:
+      - application/json
+      description: List all the projects in which user is a creator or an ordinory
+        member.
+      produces:
+      - application/json
+      responses: {}
+      summary: List user projects
+      tags:
+      - project
+swagger: "2.0"

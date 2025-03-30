@@ -12,6 +12,8 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/maksimfisenko/curatorly-server-app/internal/data"
 	"github.com/maksimfisenko/curatorly-server-app/internal/jsonlog"
+
+	_ "github.com/maksimfisenko/curatorly-server-app/docs"
 )
 
 const version = "1.0.0"
@@ -41,6 +43,12 @@ type application struct {
 	models data.Models
 }
 
+//	@title			Curatorly Server App API
+//	@version		1.0
+//	@description	This is API for the Curaturly server app.
+
+// @host		localhost:8000
+// @BasePath	/
 func main() {
 	var cfg config
 
