@@ -9,12 +9,12 @@ import (
 	"github.com/maksimfisenko/curatorly-server-app/internal/validator"
 )
 
-//	@Summary		List user projects
-//	@Description	List all the projects in which user is a creator or an ordinory member.
-//	@Tags			project
-//	@Accept			json
-//	@Produce		json
-//	@Router			/projects [get]
+// @Summary		List user projects
+// @Description	List all the projects in which user is a creator or an ordinory member.
+// @Tags			project
+// @Accept			json
+// @Produce		json
+// @Router			/projects [get]
 func (app *application) listUserProjectsHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
 
@@ -68,7 +68,7 @@ func (app *application) createProjectHandler(w http.ResponseWriter, r *http.Requ
 
 func (app *application) addUserToProject(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		AccessCode string `json:"access_code"`
+		AccessCode string `json:"accessCode"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -83,7 +83,7 @@ func (app *application) addUserToProject(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
-			v.AddError("project", "project with this code doesnt exist")
+			v.AddError("project", "Проекта с данным кодом доступа не существует")
 			app.failedValidationResponse(w, r, v.Errors)
 		default:
 			app.serverErrorResponse(w, r, err)
@@ -97,7 +97,7 @@ func (app *application) addUserToProject(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrDuplicateUserInProject):
-			v.AddError("user", "user already is a member of this project")
+			v.AddError("user", "Вы уже состоите в проекте с данным кодом доступа")
 			app.failedValidationResponse(w, r, v.Errors)
 		default:
 			app.serverErrorResponse(w, r, err)
