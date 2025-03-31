@@ -42,4 +42,10 @@ const (
 	JOIN content.projects_users pu ON p.id = pu.project_id
 	WHERE pu.user_id = $1;
 	`
+
+	queryProjectGet = `
+	SELECT id, title, access_code, creator_id, created_at
+	FROM content.projects
+	WHERE id = $1
+	`
 )

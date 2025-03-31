@@ -24,6 +24,7 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodPost, "/api/v1/projects", app.requireAuthenticatedUser(app.createProjectHandler))
 	router.HandlerFunc(http.MethodGet, "/api/v1/projects", app.requireAuthenticatedUser(app.listUserProjectsHandler))
+	router.HandlerFunc(http.MethodGet, "/api/v1/projects/:id", app.requireAuthenticatedUser(app.showProjectHandler))
 	router.HandlerFunc(http.MethodPost, "/api/v1/projects/add-user", app.requireAuthenticatedUser(app.addUserToProject))
 
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())

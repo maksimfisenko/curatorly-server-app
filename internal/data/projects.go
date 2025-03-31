@@ -163,3 +163,30 @@ func (m ProjectModel) GetAllForUser(userID int64) ([]*Project, error) {
 
 	return projects, nil
 }
+
+func (m ProjectModel) Get(id int64) (*Project, error) {
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	var project Project
+
+	err := m.DB.QueryRow(queryProjectGet, id).Scan(
+		&project.ID,
+		&project.Title,
+		&project.AccessCode,
+		&project.CreatorID,
+		&project.CreatedAt,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &project, nil
+}
