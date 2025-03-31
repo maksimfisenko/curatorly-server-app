@@ -24,7 +24,7 @@ func (app *application) listUserProjectsHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusCreated, envelope{"projects": projects}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"projects": projects}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

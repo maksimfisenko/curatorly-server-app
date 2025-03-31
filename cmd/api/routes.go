@@ -22,10 +22,14 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/api/v1/users/login", app.createAuthenticationTokenHandler)
 	router.HandlerFunc(http.MethodGet, "/api/v1/users/current", app.showCurrentUserHandler)
 
+	router.HandlerFunc(http.MethodPost, "/api/v1/projects/:id/courses", app.requireAuthenticatedUser(app.createCourseHandler))
+	router.HandlerFunc(http.MethodGet, "/api/v1/projects/:id/courses", app.requireAuthenticatedUser(app.listProjectCoursesHandler))
+
+	router.HandlerFunc(http.MethodPost, "/api/v1/add-users", app.requireAuthenticatedUser(app.addUserToProject))
+
 	router.HandlerFunc(http.MethodPost, "/api/v1/projects", app.requireAuthenticatedUser(app.createProjectHandler))
 	router.HandlerFunc(http.MethodGet, "/api/v1/projects", app.requireAuthenticatedUser(app.listUserProjectsHandler))
 	router.HandlerFunc(http.MethodGet, "/api/v1/projects/:id", app.requireAuthenticatedUser(app.showProjectHandler))
-	router.HandlerFunc(http.MethodPost, "/api/v1/projects/add-user", app.requireAuthenticatedUser(app.addUserToProject))
 
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
 

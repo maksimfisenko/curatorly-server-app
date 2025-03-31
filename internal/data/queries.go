@@ -48,4 +48,16 @@ const (
 	FROM content.projects
 	WHERE id = $1
 	`
+
+	queryCourseInsert = `
+	INSERT INTO content.courses (title, academic_year, project_id)
+	VALUES ($1, $2, $3)
+	RETURNING id
+	`
+
+	queryCourseGetAllForProject = `
+	SELECT id, title, academic_year, project_id
+	FROM content.courses
+	WHERE project_id = $1;
+	`
 )
