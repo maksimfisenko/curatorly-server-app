@@ -63,7 +63,7 @@ const (
 
 	queryCuratorInsert = `
 	INSERT INTO content.curators (name, surname, birthday, status, project_id)
-	VALUES ($1, $2, $3, $4)
+	VALUES ($1, $2, $3, $4, $5)
 	RETURNING id
 	`
 
