@@ -60,4 +60,16 @@ const (
 	FROM content.courses
 	WHERE project_id = $1;
 	`
+
+	queryCuratorInsert = `
+	INSERT INTO content.curators (name, surname, birthday, status, project_id)
+	VALUES ($1, $2, $3, $4)
+	RETURNING id
+	`
+
+	queryCuratorsGetAllForProject = `
+	SELECT id, name, surname, birthday, status, project_id
+	FROM content.curators
+	WHERE project_id = $1;
+	`
 )

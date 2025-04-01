@@ -22,6 +22,9 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/api/v1/users/login", app.createAuthenticationTokenHandler)
 	router.HandlerFunc(http.MethodGet, "/api/v1/users/current", app.showCurrentUserHandler)
 
+	router.HandlerFunc(http.MethodPost, "/api/v1/projects/:id/curators/add", app.requireAuthenticatedUser(app.createCuratorHandler))
+	router.HandlerFunc(http.MethodPost, "/api/v1/projects/:id/curators", app.requireAuthenticatedUser(app.listProjectCuratorsHandler))
+
 	router.HandlerFunc(http.MethodPost, "/api/v1/projects/:id/courses", app.requireAuthenticatedUser(app.createCourseHandler))
 	router.HandlerFunc(http.MethodGet, "/api/v1/projects/:id/courses", app.requireAuthenticatedUser(app.listProjectCoursesHandler))
 
